@@ -37,23 +37,6 @@
     }
     step()
 
-    // 活学活用：对koa-compose洋葱模型学习后，打算将step函数优化为compose模型
-    function next(){
-        return Promise.resolve()
-    }
-    function createNext(fn, next){
-        return function(){
-            fn(next)
-        }
-    }
-    function step(){
-        const len = queue.length - 1;
-        for(let i = len; i >= 0; i--) {
-            const item = queue[i]
-            next = 
-        }
-    }
-
 
 2、实现 mergePromise 函数，把传进去的数组按顺序先后执行，并且把返回的数据先后放到数组 data 中。
 
