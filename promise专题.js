@@ -10,6 +10,7 @@
     function yellow() {
         console.log("yellow")
     }
+    
 
     // 亮灯，setTimeout异步实现延时效果
     var light = function (timmer, cb) {
