@@ -4,6 +4,6 @@ js知识点活学活用
 
 
 # 文章列表
-1、[使用promise实现一个带并发限制的异步调度器](https://github.com/apollojie/javascript/issues/4)
+1、[使用promise实现一个带并发限制的异步调度器](https://github.com/apollojie/javascript/issues/4)  
 2、[理解Vue框架diff原理，使用该原理对两个数组实现merge](https://github.com/apollojie/javascript/issues/3)
 
