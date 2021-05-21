@@ -17,3 +17,5 @@ js知识点活学活用
 6. [docker部署sentry异常监控](https://github.com/apollojie/blogs/issues/6)   
 
 7. [从头实现一个koa框架](https://github.com/apollojie/simpleKoa)  
+
+8. [javascript编程专题练习](https://github.com/apollojie/blogs/issues/7)
