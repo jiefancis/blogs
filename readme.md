@@ -18,4 +18,4 @@ js知识点活学活用
 
 7. [从头实现一个koa框架](https://github.com/apollojie/simpleKoa)  
 
-8. [javascript编程专题练习](https://github.com/apollojie/blogs/issues/7)
+8. [javascript编程专题练习](https://github.com/apollojie/javascript-topic/tree/master)
