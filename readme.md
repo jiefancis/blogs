@@ -19,3 +19,5 @@ js知识点活学活用
 7. [从头实现一个koa框架](https://github.com/apollojie/simpleKoa)  
 
 8. [javascript编程专题练习](https://github.com/apollojie/javascript-topic/tree/master)
+
+9. [Vue源码解读：computed和watch如何实现依赖收集](https://github.com/apollojie/blogs/issues/8)
