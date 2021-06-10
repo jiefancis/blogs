@@ -20,8 +20,12 @@ js知识点活学活用
 
 8. [javascript编程专题练习](https://github.com/apollojie/javascript-topic/tree/master)
 
-9. [Vue源码解读：computed和watch如何实现依赖收集](https://github.com/apollojie/blogs/issues/8)
+9. [Vue源码解读：computed和watch如何实现依赖收集](https://github.com/apollojie/blogs/issues/8)  
 
-10. [不改变original tree结构的条件下实现tree filter](https://github.com/apollojie/javascript-topic/blob/master/%E6%A0%91%E7%B1%BB/tree%E6%A0%91%E5%BD%A2%E8%BF%87%E6%BB%A4.js)
+10. [不改变original tree结构的条件下实现tree filter](https://github.com/apollojie/javascript-topic/blob/master/%E6%A0%91%E7%B1%BB/tree%E6%A0%91%E5%BD%A2%E8%BF%87%E6%BB%A4.js)  
 
-11. [mysql多表查询打卡](https://github.com/apollojie/blogs/issues/9)
+11. [mysql多表查询打卡](https://github.com/apollojie/blogs/issues/9)  
+
+12. [算法系列之bfs和dfs：实现判断数组最大深度](https://github.com/apollojie/blogs/issues/10)  
+
+13. [promise系列：实现一个repeat函数，repeat(fn, times, timeout)在每隔3秒内依次执行fn ](https://github.com/apollojie/blogs/issues/11)  
