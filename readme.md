@@ -29,3 +29,7 @@ js知识点活学活用
 12. [算法系列之bfs和dfs：实现判断数组最大深度](https://github.com/apollojie/blogs/issues/10)  
 
 13. [promise系列：实现一个repeat函数，repeat(fn, times, timeout)在每隔3秒内依次执行fn ](https://github.com/apollojie/blogs/issues/11)  
+
+14. [promise系列：巧用race处理ajax请求超时](https://github.com/apollojie/blogs/issues/12)
+
+15. [源码系列：axios如何取消request请求](https://github.com/apollojie/blogs/issues/13)
