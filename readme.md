@@ -33,3 +33,5 @@ js知识点活学活用
 14. [promise系列：巧用race处理ajax请求超时](https://github.com/apollojie/blogs/issues/12)
 
 15. [源码系列：axios如何取消request请求](https://github.com/apollojie/blogs/issues/13)
+
+16. [大前端系列之monorepo调研](https://github.com/apollojie/blogs/issues/14)
