@@ -37,3 +37,7 @@ js知识点活学活用
 16. [大前端系列之monorepo调研](https://github.com/apollojie/blogs/issues/14)
 
 17. [拼手气红包](https://github.com/apollojie/blogs/issues/15)
+
+18. [vue源码之$nextTick具体实现](https://github.com/apollojie/blogs/issues/16)
+
+19. [vue源码：new Vue发生了什么？](https://github.com/apollojie/blogs/issues/17)
