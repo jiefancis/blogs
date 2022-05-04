@@ -41,3 +41,4 @@ js知识点活学活用
 18. [vue源码之$nextTick具体实现](https://github.com/apollojie/blogs/issues/16)
 
 19. [vue源码：new Vue发生了什么？](https://github.com/apollojie/blogs/issues/17)
+20. [你真的了解XMLHttpRequest.open(method, url, async)中async么？](https://github.com/jiefancis/blogs/issues/19)
