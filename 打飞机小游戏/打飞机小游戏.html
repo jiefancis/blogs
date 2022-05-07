@@ -1,0 +1,275 @@
+<html>
+    <head>
+        <title>airplane 虽然现在打飞机游戏在网上有很多文章教你怎么实现，但能否不看这些文章基于自己的现有知识点去拆解功能实现你自己的打飞机游戏呢？</title>
+        <style>
+            .wrapper,
+            .container{
+                position: relative;
+                width: 100w;
+                height: 100vh;
+                background: #ccc;
+                overflow: hidden;
+            }
+            /* .air-wrap{
+                position: relative;
+                height: 100px;
+                width: 100vw;
+             
+            } */
+            .airplane{
+                position: absolute;
+                width: 50px;
+                height: 50px;
+            }
+            .forward{
+                top: 0;
+                transform: rotate(180deg);
+                display: none;
+                /* animation: move 10s linear infinite; */
+            }
+            .guard{
+                bottom: 0;
+                left: 40%
+            }
+            body{
+                margin: 0;
+                padding: 0;
+            }
+            /* .beltn{
+                position: absolute;
+                z-index: 0;
+                width: 50px;
+                height: 50px;
+            } */
+            .bullet{
+                position: absolute;
+                z-index: 10;
+                width: 10px;
+                height: 30px;
+                border-radius: 10px;
+                background: red;
+            }
+            /* 敌机动画，一直重复从上到下的运动过程 */
+            @keyframes move{
+                0% {
+                    top: 0;
+                }
+                100% {
+                    top: 100vh;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- <div class="wrapper"> -->
+            <div class="container">
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <!-- <img src="./assets/airplane.jpg" class="airplane forward attack"/>
+                <img src="./assets/airplane.jpg" class="airplane forward attack"/> -->
+                <img src="./assets/airplane.jpg" class="airplane guard"/>
+                
+
+                <button onClick="restart()">重新开始</button>
+            </div>
+        <!-- </div> -->
+
+        <script>
+            /**
+             *  难点：
+             *  1、飞机可以点击拖动
+             *  2、敌机随机在水平线上出现  x = random 
+             *  3、敌机竖直移动，判断是否撞机  window.requestAnimationFrame
+             *  4、游戏结束：敌机与飞机碰撞，判断依据为飞机与敌机在 竖直方向上有重叠时，水平方向上也有重叠，则为碰撞。
+             * 
+             *  5、子弹发射方向、碰到敌机后 或者消失在视野上时 可以再生成。
+             *  6、子弹发射后，移动飞机，不改变已发射子弹的运动轨迹
+             */
+            let container = document.querySelector('.container')
+            let attack = document.querySelector('.attack')
+            let attackList = document.querySelectorAll('.attack')
+            let bulletList = document.querySelectorAll('.bullet')
+            // let beltn = document.querySelector('.beltn')
+            let guard = document.querySelector('.guard')
+
+            let isOver = false
+            const restart = () => { location.reload() }
+
+            function getViewport() {
+                return {
+                    vw: document.body.clientWidth || document.documentElement.clientWidth,
+                    vh: document.body.clientHeight || document.documentElement.clientHeight
+                }
+            }
+            let { vw, vh } = getViewport()
+            window.addEventListener('resize', () => { vm = getViewport(); vw = vm.vw; vh = vm.vh })
+
+            
+
+            let capacity = 15
+            let number = 0
+            for(let i = 0; i < capacity; i++) {
+                setTimeout(() => { createBullet() }, i * 500)
+            }
+            function createBullet() {
+                number = number + 1
+                //console.log('大于个数', number > capacity, number, capacity)
+                if(number > capacity) return
+                
+                let bullet = document.createElement('div')
+                bullet.setAttribute('class', 'bullet')
+                let rect = guard.getBoundingClientRect()
+                bullet.style.top = rect.top;
+                bullet.style.left = rect.left + 20;
+
+                document.body.appendChild(bullet)
+                shoot(bullet, rect.top)
+            }
+            function shoot(ele, top) {
+                
+                const node = ele
+                let start, previousTimeStamp;
+                let done = false
+
+                function step(timestamp) {
+                    if(isOver) return
+                    if (start === undefined) {
+                        start = timestamp;
+                    }
+                    const elapsed = timestamp - start;
+                    if (previousTimeStamp !== timestamp) {
+                        
+                        // shoot speed
+                        const count = Math.min(2 * elapsed, top);
+                        let origin = node.style.transform
+                        node.style.top = ((top-count-30) % top)+'px'
+                        
+                        if( count >= top && !node?._isHidden) {
+                            //console.log('消失在视图中', count >= top, count, top)
+                            number = number - 1
+                            node._isHidden = true
+                            node?.parentNode?.removeChild?.(node);
+                            if(number < capacity) {
+                                createBullet()
+                            }
+                            
+                        }
+                        // isKnock(element)
+                        
+                    }
+                    previousTimeStamp = timestamp
+                    window.requestAnimationFrame(step);
+                }
+
+                window.requestAnimationFrame(step);
+            
+            }
+
+            function isKnock(e1,e2 = guard) {
+                let rect1 = e1.getBoundingClientRect()
+                let rect2 = e2.getBoundingClientRect()
+                let l1 = rect1.left, t1 = rect1.top
+                let l2 = rect2.left, t2 = rect2.top
+
+                // 飞机与敌机在竖直方向上有重叠 && 水平方向上也有重叠
+                if(t1+50 >= t2 && t1 <= t2+50) {
+                    isOver = (t2+50 >= t1) && (l2 >= l1 && l2 < l1+50) || (l2+50 >= l1 && l2+50 <= l1+50)
+                }
+            }
+
+
+            
+            random()
+            function random() {
+                attackList.forEach((el,index) => setTimeout(() => {
+                    if(!isOver) {
+                        moveEl(el, Math.random() * vw, 0)
+                        mov(el)
+                    }
+                    
+                }, 1000 * index))
+            }
+
+            function mov(ele) {
+                if(!ele._block) {
+                    ele._block = true
+                    ele.style.display ="block"
+                }
+                
+                const element = ele
+                let start, previousTimeStamp;
+                let done = false
+
+                function step(timestamp) {
+                    if(isOver) return
+                    if (start === undefined) {
+                        start = timestamp;
+                    }
+                    const elapsed = timestamp - start;
+                    if (previousTimeStamp !== timestamp) {
+                        
+                        const count = Math.min(0.1 * elapsed, vh);
+                        let origin = element.style.transform
+                        element.style.top = (count % vh)+'px'
+                        
+                        isKnock(element)
+                        // 到底重置
+                        if (count === vh) {
+                            // //console.log('到底', count === vh)
+                            start = timestamp
+                            moveEl(element, Math.random() * vw, 0)
+                        }
+                    }
+                    previousTimeStamp = timestamp
+                    window.requestAnimationFrame(step);
+                }
+
+                window.requestAnimationFrame(step);
+            }
+            
+            
+            function moveEl(el, left, top) {
+                if(left + 50 >= vw) {
+                    el.style.left = (vw -50) + 'px'
+                } else {
+                    el.style.left = left + 'px'
+                }
+                el.style.top = top + 'px'
+            }
+            // pc端
+            container.addEventListener('mousedown', mousedown)
+            function mousedown(e) {
+                container.addEventListener('mousemove', mousemove)
+                container.addEventListener('mouseup', mouseup)
+                container.addEventListener('touchmove', mousemove)
+                container.addEventListener('touchend', mouseup)
+                let ox = e.pageX,oy = e.pageY, mx, my, dx, dy
+                function mouseup(e) {
+                    container.removeEventListener('mousemove', mousemove)
+                    container.removeEventListener('mouseup', mouseup)
+                    container.removeEventListener('touchmove', mousemove)
+                    container.removeEventListener('touchend', mouseup)
+                }
+                function mousemove(e) {
+                    mx = e.pageX
+                    my = e.pageY
+                    dx = mx - ox
+                    dy = my - oy
+                    moveEl(guard, dx+ox, dy+oy)
+                    
+                }
+                
+            }
+
+            // 移动端
+            container.addEventListener('touchstart', mousedown)
+
+        </script>
+    </body>
+</html>
