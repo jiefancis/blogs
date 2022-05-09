@@ -83,21 +83,20 @@
              *  6、子弹发射后，移动飞机，不改变已发射子弹的运动轨迹
              */
             let container = document.querySelector('.container')
-            let attack = document.querySelector('.attack')
             let attackList = document.querySelectorAll('.attack')
             let scoreDom =  document.querySelector('.score')
-            let bulletList = [] // document.querySelectorAll('.bullet')
-            // let beltn = document.querySelector('.beltn')
             let guard = document.querySelector('.guard');
-            let score = 0
             guard._moved = false
+
+            let bulletList = []
+            let score = 0
             let { vw, vh } = getViewport()
-            let capacity = 15
-            let number = 0
+            
             let guardRect = guard.getBoundingClientRect()
-            // 初始时 guard.style.top left为空
-            // { top: parseFloat(guard.style.top) || vh, left: parseFloat(guard.style.left) || vw }
+            // 游戏结束
             let isOver = false
+
+            // 重新开始
             const restart = () => { location.reload() }
             function getViewport() {
                 return {
@@ -107,10 +106,14 @@
             }
             window.addEventListener('resize', () => { vm = getViewport(); vw = vm.vw; vh = vm.vh })
 
+            setScore()
             function setScore() {
                 scoreDom.textContent = score
             }
-            setScore()
+            
+            // 射击
+            // 子弹数量
+            let capacity = 15
             createBullet(capacity)
             function createBullet(capacity) {
                 for(let i = 0; i < capacity; i++) {
@@ -121,7 +124,7 @@
                 }
                 beforeShoot()
             }
-            function beforeShoot(ele) {
+            function beforeShoot() {
                 for(let i = 0; i < bulletList.length; i++) {
                     setTimeout(() => {
                         let bullet = bulletList[i]
@@ -142,6 +145,7 @@
                 function step(timestamp) {
 
                     if (isOver) return
+
                     if (start === undefined) {
                         start = timestamp;
                     }
@@ -155,22 +159,22 @@
                         node.style.top = ((top-count-30) % top)+'px'
                         
                         // 到顶，需要重置
-                        // 子弹这块卡顿，添加_isHidden属性，避免在视野外依然执行
                         if( count === top ) {
                             start = timestamp
                             top = guardRect.top
                             moveEl(node, guardRect.left, guardRect.top)
                         }
 
-                        // 子弹击中飞机
-                        // 击中飞机，飞机并未回到初始状态，水平方向移动了
-                        attackList.forEach(item => {
-                            if(shootTarget(ele, item)) {
+                        // 子弹击中飞机，分数加1，重置飞机和子弹位置
+                        attackList.forEach(attack => {
+                            if(shootTarget(ele, attack)) {
                                 top = guardRect.top
-                                moveEl(node, guardRect.left, guardRect.top)
+                                moveEl(node, guardRect.left, top)
+
                                 setScore(++score)
-                                item._knocked = true
-                                item.style.display = "none"
+
+                                attack._knocked = true
+                                attack.style.display = "none"
                             }
                         })
                         
@@ -194,6 +198,7 @@
                 return false
             }
 
+            // 敌机与飞机发生碰撞，游戏结束
             function isKnock(e1,e2 = guard) {
                 let rect1 = e1.getBoundingClientRect()
                 let rect2 = e2.getBoundingClientRect()
@@ -217,7 +222,6 @@
                         moveEl(el, Math.random() * vw, 0)
                         mov(el)
                     }
-                    
                 }, 1000 * index))
             }
 
@@ -232,13 +236,17 @@
 
                 function step(timestamp) {
                     if(isOver) return
+
                     if (start === undefined) {
                         start = timestamp;
                     }
+
                     const elapsed = timestamp - start;
+
                     if (previousTimeStamp !== timestamp) {
                         
-                        const count = Math.min(0.3 * elapsed - 100, vh);
+                        // 飞机飞行速度控制
+                        const count = Math.min(0.5 * elapsed - 100, vh);
                         element.style.top = (count % vh)+'px'
                         
                         isKnock(element)
@@ -277,6 +285,7 @@
             // pc端
             container.addEventListener('mousedown', mousedown)
             function mousedown(e) {
+                e.preventDefault()
                 container.addEventListener('mousemove', mousemove)
                 container.addEventListener('mouseup', mouseup)
                 let ox = e.pageX,oy = e.pageY, mx, my, dx, dy
