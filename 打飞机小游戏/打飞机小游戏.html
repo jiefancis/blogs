@@ -10,12 +10,6 @@
                 background: #ccc;
                 overflow: hidden;
             }
-            /* .air-wrap{
-                position: relative;
-                height: 100px;
-                width: 100vw;
-             
-            } */
             .airplane{
                 position: absolute;
                 width: 50px;
@@ -35,12 +29,10 @@
                 margin: 0;
                 padding: 0;
             }
-            /* .beltn{
-                position: absolute;
-                z-index: 0;
-                width: 50px;
-                height: 50px;
-            } */
+            
+            .score{
+                font-size: 20px;
+            }
             .bullet{
                 position: absolute;
                 z-index: 10;
@@ -71,12 +63,11 @@
                 <img src="./assets/airplane.jpg" class="airplane forward attack"/>
                 <img src="./assets/airplane.jpg" class="airplane forward attack"/>
                 <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <!-- <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/> -->
+
                 <img src="./assets/airplane.jpg" class="airplane guard"/>
                 
-
                 <button onClick="restart()">重新开始</button>
+                <div class="score"></div>
             </div>
         <!-- </div> -->
 
@@ -94,73 +85,94 @@
             let container = document.querySelector('.container')
             let attack = document.querySelector('.attack')
             let attackList = document.querySelectorAll('.attack')
-            let bulletList = document.querySelectorAll('.bullet')
+            let scoreDom =  document.querySelector('.score')
+            let bulletList = [] // document.querySelectorAll('.bullet')
             // let beltn = document.querySelector('.beltn')
-            let guard = document.querySelector('.guard')
-
+            let guard = document.querySelector('.guard');
+            let score = 0
+            guard._moved = false
+            let { vw, vh } = getViewport()
+            let capacity = 15
+            let number = 0
+            let guardRect = guard.getBoundingClientRect()
+            // 初始时 guard.style.top left为空
+            // { top: parseFloat(guard.style.top) || vh, left: parseFloat(guard.style.left) || vw }
             let isOver = false
             const restart = () => { location.reload() }
-
             function getViewport() {
                 return {
                     vw: document.body.clientWidth || document.documentElement.clientWidth,
                     vh: document.body.clientHeight || document.documentElement.clientHeight
                 }
             }
-            let { vw, vh } = getViewport()
             window.addEventListener('resize', () => { vm = getViewport(); vw = vm.vw; vh = vm.vh })
 
-            
-
-            let capacity = 15
-            let number = 0
-            for(let i = 0; i < capacity; i++) {
-                setTimeout(() => { createBullet() }, i * 500)
+            function setScore() {
+                scoreDom.textContent = score
             }
-            function createBullet() {
-                number = number + 1
-                //console.log('大于个数', number > capacity, number, capacity)
-                if(number > capacity) return
-                
-                let bullet = document.createElement('div')
-                bullet.setAttribute('class', 'bullet')
-                let rect = guard.getBoundingClientRect()
-                bullet.style.top = rect.top;
-                bullet.style.left = rect.left + 20;
-
-                document.body.appendChild(bullet)
-                shoot(bullet, rect.top)
+            setScore()
+            createBullet(capacity)
+            function createBullet(capacity) {
+                for(let i = 0; i < capacity; i++) {
+                    let bullet = document.createElement('div')
+                        bullet.setAttribute('class', 'bullet')
+                        document.body.appendChild(bullet)
+                        bulletList.push(bullet)
+                }
+                beforeShoot()
+            }
+            function beforeShoot(ele) {
+                for(let i = 0; i < bulletList.length; i++) {
+                    setTimeout(() => {
+                        let bullet = bulletList[i]
+                        if(guard._moved) {
+                            guardRect = { top: parseFloat(guard.style.top), left: parseFloat(guard.style.left) }
+                        }
+                        bullet.style.top = guardRect.top;
+                        bullet.style.left = guardRect.left + 20;
+                        shoot(bullet, guardRect.top || vh)
+                    }, i * 300)
+                }
             }
             function shoot(ele, top) {
                 
                 const node = ele
                 let start, previousTimeStamp;
-                let done = false
-
+                
                 function step(timestamp) {
-                    if(isOver) return
+
+                    if (isOver) return
                     if (start === undefined) {
                         start = timestamp;
                     }
+
                     const elapsed = timestamp - start;
                     if (previousTimeStamp !== timestamp) {
                         
                         // shoot speed
-                        const count = Math.min(2 * elapsed, top);
-                        let origin = node.style.transform
+                        const count = Math.min(1 * elapsed, top);
+                        
                         node.style.top = ((top-count-30) % top)+'px'
                         
-                        if( count >= top && !node?._isHidden) {
-                            //console.log('消失在视图中', count >= top, count, top)
-                            number = number - 1
-                            node._isHidden = true
-                            node?.parentNode?.removeChild?.(node);
-                            if(number < capacity) {
-                                createBullet()
-                            }
-                            
+                        // 到顶，需要重置
+                        // 子弹这块卡顿，添加_isHidden属性，避免在视野外依然执行
+                        if( count === top ) {
+                            start = timestamp
+                            top = guardRect.top
+                            moveEl(node, guardRect.left, guardRect.top)
                         }
-                        // isKnock(element)
+
+                        // 子弹击中飞机
+                        // 击中飞机，飞机并未回到初始状态，水平方向移动了
+                        attackList.forEach(item => {
+                            if(shootTarget(ele, item)) {
+                                top = guardRect.top
+                                moveEl(node, guardRect.left, guardRect.top)
+                                setScore(++score)
+                                item._knocked = true
+                                item.style.display = "none"
+                            }
+                        })
                         
                     }
                     previousTimeStamp = timestamp
@@ -171,6 +183,17 @@
             
             }
 
+            function shootTarget(bullet, target) {
+                let bt = parseFloat(bullet.style.top), bl = parseFloat(bullet.style.left)
+                let tt = parseFloat(target.style.top), tl = parseFloat(target.style.left)
+    
+                if((bl >= tl && bl <= tl+50)) {
+                    
+                    return (tt+50 >= bt && bt <= tt)
+                }
+                return false
+            }
+
             function isKnock(e1,e2 = guard) {
                 let rect1 = e1.getBoundingClientRect()
                 let rect2 = e2.getBoundingClientRect()
@@ -179,8 +202,10 @@
 
                 // 飞机与敌机在竖直方向上有重叠 && 水平方向上也有重叠
                 if(t1+50 >= t2 && t1 <= t2+50) {
-                    isOver = (t2+50 >= t1) && (l2 >= l1 && l2 < l1+50) || (l2+50 >= l1 && l2+50 <= l1+50)
+                    isOver = (l2 >= l1 && l2 < l1+50) || (l2+50 >= l1 && l2+50 <= l1+50) //(t2+50 >= t1) && 
+                    return true
                 }
+                return false
             }
 
 
@@ -204,7 +229,6 @@
                 
                 const element = ele
                 let start, previousTimeStamp;
-                let done = false
 
                 function step(timestamp) {
                     if(isOver) return
@@ -214,16 +238,24 @@
                     const elapsed = timestamp - start;
                     if (previousTimeStamp !== timestamp) {
                         
-                        const count = Math.min(0.1 * elapsed, vh);
-                        let origin = element.style.transform
+                        const count = Math.min(0.3 * elapsed - 100, vh);
                         element.style.top = (count % vh)+'px'
                         
                         isKnock(element)
+                        if(element._knocked) {
+                            start = timestamp
+                            setTimeout(() => {
+                                element.style.display = "block"
+                                moveEl(element, Math.random() * vw, 0)
+                                element._knocked = false
+                            }, 0)
+                            
+                        }
                         // 到底重置
                         if (count === vh) {
-                            // //console.log('到底', count === vh)
+                            top = -100
                             start = timestamp
-                            moveEl(element, Math.random() * vw, 0)
+                            moveEl(element, Math.random() * vw, -100)
                         }
                     }
                     previousTimeStamp = timestamp
@@ -247,14 +279,11 @@
             function mousedown(e) {
                 container.addEventListener('mousemove', mousemove)
                 container.addEventListener('mouseup', mouseup)
-                container.addEventListener('touchmove', mousemove)
-                container.addEventListener('touchend', mouseup)
                 let ox = e.pageX,oy = e.pageY, mx, my, dx, dy
                 function mouseup(e) {
                     container.removeEventListener('mousemove', mousemove)
                     container.removeEventListener('mouseup', mouseup)
-                    container.removeEventListener('touchmove', mousemove)
-                    container.removeEventListener('touchend', mouseup)
+                    guard._moved = false
                 }
                 function mousemove(e) {
                     mx = e.pageX
@@ -262,13 +291,11 @@
                     dx = mx - ox
                     dy = my - oy
                     moveEl(guard, dx+ox, dy+oy)
-                    
+                    guard._moved = true
+                    guardRect = guard.getBoundingClientRect()
                 }
                 
             }
-
-            // 移动端
-            container.addEventListener('touchstart', mousedown)
 
         </script>
     </body>
