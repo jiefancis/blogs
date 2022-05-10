@@ -1,311 +1,382 @@
 <html>
-    <head>
-        <title>airplane 虽然现在打飞机游戏在网上有很多文章教你怎么实现，但能否不看这些文章基于自己的现有知识点去拆解功能实现你自己的打飞机游戏呢？</title>
-        <style>
-            .wrapper,
-            .container{
-                position: relative;
-                width: 100w;
-                height: 100vh;
-                background: #ccc;
-                overflow: hidden;
-            }
-            .airplane{
-                position: absolute;
-                width: 50px;
-                height: 50px;
-            }
-            .forward{
+
+<head>
+    <title>airplane 虽然现在打飞机游戏在网上有很多文章教你怎么实现，但能否不看这些文章基于自己的现有知识点去拆解功能实现你自己的打飞机游戏呢？</title>
+    <style>
+        .wrapper,
+        .container {
+            position: relative;
+            width: 100w;
+            height: 100vh;
+            background: #ccc;
+            overflow: hidden;
+        }
+
+        .airplane {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+        }
+
+        .forward {
+            top: 0;
+            transform: rotate(180deg);
+            /* display: none; */
+            /* animation: move 10s linear infinite; */
+        }
+
+        .guard {
+            bottom: 0;
+            left: 40%
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .score {
+            font-size: 20px;
+        }
+
+        .bullet {
+            position: absolute;
+            z-index: 10;
+            width: 10px;
+            height: 30px;
+            border-radius: 10px;
+            background: red;
+        }
+
+        /* 敌机动画，一直重复从上到下的运动过程 */
+        @keyframes move {
+            0% {
                 top: 0;
-                transform: rotate(180deg);
-                display: none;
-                /* animation: move 10s linear infinite; */
             }
-            .guard{
-                bottom: 0;
-                left: 40%
-            }
-            body{
-                margin: 0;
-                padding: 0;
-            }
-            
-            .score{
-                font-size: 20px;
-            }
-            .bullet{
-                position: absolute;
-                z-index: 10;
-                width: 10px;
-                height: 30px;
-                border-radius: 10px;
-                background: red;
-            }
-            /* 敌机动画，一直重复从上到下的运动过程 */
-            @keyframes move{
-                0% {
-                    top: 0;
-                }
-                100% {
-                    top: 100vh;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <!-- <div class="wrapper"> -->
-            <div class="container">
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
-                <img src="./assets/airplane.jpg" class="airplane forward attack"/>
 
-                <img src="./assets/airplane.jpg" class="airplane guard"/>
+            100% {
+                top: 100vh;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+
+        <img src="./assets/airplane.jpg" class="airplane guard" />
+
+        <button onClick="restart()">重新开始</button>
+
+        <div class="score"></div>
+    </div>
+
+    <script>
+        function appendChild(parent, child) {
+            parent.appendChild(child)
+        }
+        function query(sel) {
+            return document.querySelector(sel)
+        }
+        function getViewport() {
+            let vp = document.body || document.documentElement
+            return {
+                vw: vp.clientWidth,
+                vh: vp.clientHeight
+            }
+        }
+        let vp = getViewport()
+        let container = query('.container')
+        let guard = query('.guard')
+        let guardRect = guard.getBoundingClientRect()
+        let gameOver = false
+        let bulletList = []
+        let scoreElm = query('.score')
+        let score = 0
+
+
+        function restart() {
+            location.reload()
+        }
+        function extend(target, source = {}) {
+            return Object.assign(target, source)
+        }
+        function updateScore() {
+            scoreElm.textContent = `得分：${score}`
+        }
+
+        const BASECONFIG = {
+            attackClassName: 'airplane forward attack',
+            initAttackX: () => Math.random() * vp.vw,
+            bulletClassName: 'bullet',
+        }
+
+        // 敌机 new Attack().animate()
+        class Attack{
+            constructor( options = {} ) {
+               const defaultOptions = { speed: 0.1, x: BASECONFIG.initAttackX(), y: 0, width: 50, height: 50 }
+
+               this.options = extend(defaultOptions, options)
+               this.elm = this.createElm()
+               this.init()
+            }
+            createElm(className = BASECONFIG.attackClassName) {
+                let elm = document.createElement('img')
+                elm.className = className
+                elm.src= './assets/airplane.jpg'
+                appendChild(container, elm)
+                return elm
+            } 
+            init(options = {}) {
+                let _option = extend(this.options, options)
+                if(_option.x + _option.width >= vp.vw) {
+                    this.elm.style.left = (vp.vw - _option.width )+ 'px'
+                } else {
+                    this.elm.style.left = _option.x + 'px'
+                }
                 
-                <button onClick="restart()">重新开始</button>
-                <div class="score"></div>
-            </div>
-        <!-- </div> -->
-
-        <script>
-            /**
-             *  难点：
-             *  1、飞机可以点击拖动
-             *  2、敌机随机在水平线上出现  x = random 
-             *  3、敌机竖直移动，判断是否撞机  window.requestAnimationFrame
-             *  4、游戏结束：敌机与飞机碰撞，判断依据为飞机与敌机在 竖直方向上有重叠时，水平方向上也有重叠，则为碰撞。
-             * 
-             *  5、子弹发射方向、碰到敌机后 或者消失在视野上时 可以再生成。
-             *  6、子弹发射后，移动飞机，不改变已发射子弹的运动轨迹
-             */
-            let container = document.querySelector('.container')
-            let attackList = document.querySelectorAll('.attack')
-            let scoreDom =  document.querySelector('.score')
-            let guard = document.querySelector('.guard');
-            guard._moved = false
-
-            let bulletList = []
-            let score = 0
-            let { vw, vh } = getViewport()
-            
-            let guardRect = guard.getBoundingClientRect()
-            // 游戏结束
-            let isOver = false
-
-            // 重新开始
-            const restart = () => { location.reload() }
-            function getViewport() {
-                return {
-                    vw: document.body.clientWidth || document.documentElement.clientWidth,
-                    vh: document.body.clientHeight || document.documentElement.clientHeight
-                }
+                this.elm.style.top = `-${_option.height}px`
             }
-            window.addEventListener('resize', () => { vm = getViewport(); vw = vm.vw; vh = vm.vh })
+            isKnock(guard = guard) {
+                let e1 = this.elm,
+                    e2 = guard,
+                    evw = this.options.width,
+                    evh = this.options.height,
+                    gvw = guard.$options.width,
+                    gvh = guard.$options.height
 
-            setScore()
-            function setScore() {
-                scoreDom.textContent = score
-            }
-            
-            // 射击
-            // 子弹数量
-            let capacity = 15
-            createBullet(capacity)
-            function createBullet(capacity) {
-                for(let i = 0; i < capacity; i++) {
-                    let bullet = document.createElement('div')
-                        bullet.setAttribute('class', 'bullet')
-                        document.body.appendChild(bullet)
-                        bulletList.push(bullet)
-                }
-                beforeShoot()
-            }
-            function beforeShoot() {
-                for(let i = 0; i < bulletList.length; i++) {
-                    setTimeout(() => {
-                        let bullet = bulletList[i]
-                        if(guard._moved) {
-                            guardRect = { top: parseFloat(guard.style.top), left: parseFloat(guard.style.left) }
-                        }
-                        bullet.style.top = guardRect.top;
-                        bullet.style.left = guardRect.left + 20;
-                        shoot(bullet, guardRect.top || vh)
-                    }, i * 300)
-                }
-            }
-            function shoot(ele, top) {
-                
-                const node = ele
-                let start, previousTimeStamp;
-                
-                function step(timestamp) {
-
-                    if (isOver) return
-
-                    if (start === undefined) {
-                        start = timestamp;
-                    }
-
-                    const elapsed = timestamp - start;
-                    if (previousTimeStamp !== timestamp) {
-                        
-                        // shoot speed
-                        const count = Math.min(1 * elapsed, top);
-                        
-                        node.style.top = ((top-count-30) % top)+'px'
-                        
-                        // 到顶，需要重置
-                        if( count === top ) {
-                            start = timestamp
-                            top = guardRect.top
-                            moveEl(node, guardRect.left, guardRect.top)
-                        }
-
-                        // 子弹击中飞机，分数加1，重置飞机和子弹位置
-                        attackList.forEach(attack => {
-                            if(shootTarget(ele, attack)) {
-                                top = guardRect.top
-                                moveEl(node, guardRect.left, top)
-
-                                setScore(++score)
-
-                                attack._knocked = true
-                                attack.style.display = "none"
-                            }
-                        })
-                        
-                    }
-                    previousTimeStamp = timestamp
-                    window.requestAnimationFrame(step);
-                }
-
-                window.requestAnimationFrame(step);
-            
-            }
-
-            function shootTarget(bullet, target) {
-                let bt = parseFloat(bullet.style.top), bl = parseFloat(bullet.style.left)
-                let tt = parseFloat(target.style.top), tl = parseFloat(target.style.left)
-    
-                if((bl >= tl && bl <= tl+50)) {
-                    
-                    return (tt+50 >= bt && bt <= tt)
-                }
-                return false
-            }
-
-            // 敌机与飞机发生碰撞，游戏结束
-            function isKnock(e1,e2 = guard) {
                 let rect1 = e1.getBoundingClientRect()
                 let rect2 = e2.getBoundingClientRect()
                 let l1 = rect1.left, t1 = rect1.top
                 let l2 = rect2.left, t2 = rect2.top
 
                 // 飞机与敌机在竖直方向上有重叠 && 水平方向上也有重叠
-                if(t1+50 >= t2 && t1 <= t2+50) {
-                    isOver = (l2 >= l1 && l2 < l1+50) || (l2+50 >= l1 && l2+50 <= l1+50) //(t2+50 >= t1) && 
+                if(t1 + evh >= t2 && t1 <= t2 + gvh) {
+                    gameOver = (l1 <= l2 && l1 + evw >= l2) || (l1 <= l2+gvw && l1+evw >= l2+gvw)
                     return true
                 }
                 return false
             }
-
-
-            
-            random()
-            function random() {
-                attackList.forEach((el,index) => setTimeout(() => {
-                    if(!isOver) {
-                        moveEl(el, Math.random() * vw, 0)
-                        mov(el)
-                    }
-                }, 1000 * index))
-            }
-
-            function mov(ele) {
-                if(!ele._block) {
-                    ele._block = true
-                    ele.style.display ="block"
+            shootByBullet(bulletInstance) {
+                let elm = this.elm,
+                    bullet = bulletInstance,
+                    bt = parseFloat(bullet.style.top),
+                    bl = parseFloat(bullet.style.left),
+                    tt = parseFloat(elm.style.top),
+                    tl = parseFloat(elm.style.left),
+                    vw = this.options.width,
+                    vh = this.options.height;
+    
+                if((bl >= tl && bl <= tl + vw)) {
+                    return (tt+vh >= bt && bt <= tt)
                 }
-                
-                const element = ele
-                let start, previousTimeStamp;
-
+                return false
+            }
+            animate(cb) {
+                let start, self = this;
                 function step(timestamp) {
-                    if(isOver) return
 
-                    if (start === undefined) {
-                        start = timestamp;
+                    if(gameOver) return
+
+                    if(!start) start = timestamp
+
+                    const options = self.options
+                    const elsped = timestamp - start
+                    const px = Math.min(elsped * options.speed - options.height, vp.vh)
+
+                    self.elm.style.top = `${px}px`
+
+                    // 与守卫飞机碰撞，游戏结束
+                    self.isKnock(guard)
+
+                    // 被子弹击中，子弹和敌机都重置，并且分数加一
+                    bulletList.forEach(bullet => {
+                        if(self.shootByBullet(bullet.elm)) {
+                            self._shooted = true
+                            updateScore(++score)
+
+                            bullet._shooted = true
+                        }
+                    })
+
+                    if(self._shooted) {
+                        start = timestamp
+                        setTimeout(() => {
+                            self._shooted = false
+                        }, 0)
                     }
 
-                    const elapsed = timestamp - start;
-
-                    if (previousTimeStamp !== timestamp) {
-                        
-                        // 飞机飞行速度控制
-                        const count = Math.min(0.5 * elapsed - 100, vh);
-                        element.style.top = (count % vh)+'px'
-                        
-                        isKnock(element)
-                        if(element._knocked) {
-                            start = timestamp
-                            setTimeout(() => {
-                                element.style.display = "block"
-                                moveEl(element, Math.random() * vw, 0)
-                                element._knocked = false
-                            }, 0)
-                            
-                        }
-                        // 到底重置
-                        if (count === vh) {
-                            top = -100
-                            start = timestamp
-                            moveEl(element, Math.random() * vw, -100)
-                        }
+                    if(px >= vp.vh) {
+                        start = timestamp
+                        self.reset()
+                    } else if(cb){
+                        cb()
                     }
-                    previousTimeStamp = timestamp
-                    window.requestAnimationFrame(step);
+                    window.requestAnimationFrame(step)
                 }
+                window.requestAnimationFrame(step)
+            }
+            reset() {
+                let self = this
+                if(self._shooted) {
+                    setTimeout(() => {
+                        console.log('被击中')
+                        self.elm.style.display = 'block'
+                        self._shooted = false
+                    }, 500)
+                }
+                this.elm.style.left = Math.random() * vp.vw + 'px'
+                this.elm.style.top = `-${this.options.height}px`
+            }
+        }
+        
 
-                window.requestAnimationFrame(step);
+
+        // 子弹 new Bullet().animate()
+        class Bullet{
+            constructor(options = { 
+                speed: 0.1,
+                x: guardRect.left,
+                y: guardRect.top,
+                width: 10,
+                height: 30
+            }) {
+
+                const defaultOptions = { 
+                    speed: 0.1,
+                    x: guardRect.left,
+                    y: guardRect.top,
+                    width: 10,
+                    height: 30
+                }
+                this.options = extend(defaultOptions, options)
+                this.elm = this.createElm()
+                this.init()
             }
-            
-            
-            function moveEl(el, left, top) {
-                if(left + 50 >= vw) {
-                    el.style.left = (vw -50) + 'px'
-                } else {
-                    el.style.left = left + 'px'
-                }
-                el.style.top = top + 'px'
-            }
-            // pc端
-            container.addEventListener('mousedown', mousedown)
-            function mousedown(e) {
-                e.preventDefault()
-                container.addEventListener('mousemove', mousemove)
-                container.addEventListener('mouseup', mouseup)
-                let ox = e.pageX,oy = e.pageY, mx, my, dx, dy
-                function mouseup(e) {
-                    container.removeEventListener('mousemove', mousemove)
-                    container.removeEventListener('mouseup', mouseup)
-                    guard._moved = false
-                }
-                function mousemove(e) {
-                    mx = e.pageX
-                    my = e.pageY
-                    dx = mx - ox
-                    dy = my - oy
-                    moveEl(guard, dx+ox, dy+oy)
-                    guard._moved = true
-                    guardRect = guard.getBoundingClientRect()
-                }
+            createElm(className = BASECONFIG.bulletClassName) {
+                let elm = document.createElement('div')
+                elm.className = className
                 
+                appendChild(container, elm)
+                return elm
+            } 
+            init(options = {}) {
+                let _option = extend(this.options, options)
+                
+                this.elm.style.left = `${_option.x + (guardRect.width-_option.width)/2}px`
+                this.elm.style.top = `${_option.y}px`
             }
+            animate(cb) {
+                let start, self = this, top = guardRect.top;
+                function step(timestamp) {
+                    if(gameOver) return
+                    if(!start) start = timestamp
 
-        </script>
-    </body>
+                    const options = self.options
+                    const elsped = timestamp - start
+                    const px = Math.min(top - elsped * options.speed, vp.vh)
+
+                    self.elm.style.top = `${px}px`
+
+                    if(px <= -options.height) {
+                        start = timestamp
+                        top = guardRect.top
+                        self.reset()
+                    } else if(cb) {
+                        cb()
+                    }
+                    window.requestAnimationFrame(step)
+                }
+                window.requestAnimationFrame(step)
+            }
+            reset() {
+                // this.elm.style.left = `${_option.x + (guardRect.width - _option.width)/2}px`
+                // this.elm.style.left = Math.random() * vp.vw + 'px'
+
+                let _option = this.options
+                this.elm.style.left = `${guardRect.left + (guardRect.width-_option.width)/2}px`
+               
+                this.elm.style.top = `-${guardRect.top}px`
+                // console.log('reset', this.elm.style.left, guardRect)
+            }
+        }
+        
+        function createAttack(capacity = 8) {
+            while(capacity--) {
+                setTimeout(() => new Attack().animate(), capacity * 500)
+            }
+        }
+        function createBullet(capacity = 10) {
+            while(capacity--) {
+                setTimeout(() => {
+                    let bullet = new Bullet({speed: 2})
+                    bulletList.push(bullet)
+                    bullet.animate()
+                }, capacity * 100)
+            }
+        }
+        
+
+        // 守卫飞机
+        class Guard{
+            constructor(options = {}) {
+                const defaultOptions = { width: 50, height: 50, container: container, guard: guard}
+                this.options = extend(defaultOptions, options)
+                this.init()
+            }
+            init() {
+                let {
+                    container,
+                    guard
+                } = this.options
+                guard.$options = extend(this.options)
+
+                container.addEventListener('mousedown', mousedown)
+                function mousedown(e) {
+                    e.preventDefault()
+                    container.addEventListener('mousemove', mousemove)
+                    container.addEventListener('mouseup', mouseup)
+                    let ox = e.pageX,
+                        oy = e.pageY,
+                        mx, my, dx, dy
+
+                    function mouseup(e) {
+                        container.removeEventListener('mousemove', mousemove)
+                        container.removeEventListener('mouseup', mouseup)
+                    }
+                    function mousemove(e) {
+                        mx = e.pageX
+                        my = e.pageY
+                        dx = mx - ox
+                        dy = my - oy
+                        moveEl(guard, dx+ox, dy+oy)
+                        guardRect = guard.getBoundingClientRect()
+                    }
+                }
+            }
+        }
+        
+        function moveEl(el, left, top) {
+            let width = el.$options.width
+
+            if(left + width >= vp.vw) {
+                el.style.left = (vp.vw - width) + 'px'
+            } else {
+                el.style.left = left + 'px'
+            }
+            el.style.top = top + 'px'
+        }
+
+        function gameStart() {
+            createAttack()
+            createBullet()
+            new Guard()
+        }
+        gameStart()
+        
+    </script>
+</body>
+
 </html>
