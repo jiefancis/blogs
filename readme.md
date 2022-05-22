@@ -47,3 +47,5 @@ js知识点活学活用
 21. [watch一个对象，新值与旧值相等的问题](https://github.com/jiefancis/blogs/issues/20)  
 
 22. [原生js实现打飞机小游戏](https://github.com/jiefancis/blogs/blob/master/%E6%89%93%E9%A3%9E%E6%9C%BA%E5%B0%8F%E6%B8%B8%E6%88%8F/%E6%89%93%E9%A3%9E%E6%9C%BA%E5%B0%8F%E6%B8%B8%E6%88%8F.html)
+
+23. [你真的了解npm run xxx的原理么？](https://github.com/jiefancis/blogs/issues/22)
