@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <title>canvas实现签名</title>
+    <style>
+        #canvas{
+            border: 1px solid #ccc;
+        }
+    </style>
+   
+</head>
+
+<body>
+
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <script>
+       const canvas = document.querySelector('#canvas')
+       const ctx = canvas.getContext('2d')
+       let drawing = false;
+
+       canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            ctx.moveTo(e.pageX, e.pageY)
+       })
+       
+       canvas.addEventListener('mousemove', (e) => {
+           if(drawing) {
+                ctx.lineTo(e.pageX, e.pageY)
+                ctx.stroke()
+           }
+            
+       })
+
+       canvas.addEventListener('mouseup', (e) => {
+            drawing = false;
+       })
+       
+        
+    </script>
+</body>
+
+</html>
